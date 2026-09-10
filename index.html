@@ -3,68 +3,113 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Live translated captions</title>
+<title>West High School — Live Caption Translation</title>
+<link rel="icon" href="logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85,500;85,700;100,400;100,500;100,600&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#eef0ea;--ink:#1d211c;--muted:#5f665c;--accent:#1c5d8f;--panel:#fff;--rule:#cfd4c9}
+  :root{--green:#014631;--green-deep:#022e21;--gold:#fbc80b;--gold-deep:#d9a900;--tint:#e9f0eb;--ink:#12261b;--muted:#4f6659;--rule:#c9d6cd}
   *{box-sizing:border-box}
-  body{margin:0;font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--ink)}
-  main{max-width:540px;margin:48px auto;padding:0 24px}
-  h1{font-size:26px;font-weight:600;margin:0 0 8px;letter-spacing:-.01em}
-  .lead{color:var(--muted);margin:0 0 28px;line-height:1.5;font-size:15px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;margin-bottom:20px}
-  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  body{margin:0;font-family:"Archivo","Segoe UI",system-ui,sans-serif;background:var(--tint);color:var(--ink);min-height:100vh}
+  header{background:var(--green);color:#fff;border-bottom:6px solid var(--gold)}
+  .head{max-width:900px;margin:0 auto;padding:26px 24px 22px;display:flex;align-items:center;gap:22px}
+  .head img{height:96px;width:auto;background:#fff;border-radius:10px;padding:6px}
+  .head .school{font-size:14px;letter-spacing:.02em;color:var(--gold);font-weight:600;margin:0 0 4px}
+  .head h1{font-family:"Archivo","Segoe UI",sans-serif;font-stretch:85%;font-weight:700;font-size:38px;line-height:1.05;margin:0;letter-spacing:-.01em}
+  main{max-width:900px;margin:0 auto;padding:32px 24px 48px;display:grid;grid-template-columns:1.1fr .9fr;gap:28px}
+  .panel{background:#fff;border-radius:12px;padding:26px 26px 28px;box-shadow:0 1px 0 rgba(1,70,49,.08)}
+  .panel h2{font-size:17px;font-weight:600;margin:0 0 18px;color:var(--green)}
+  .lead{color:var(--muted);margin:0 0 22px;line-height:1.5;font-size:15px}
+  label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
+  .field{margin-bottom:18px}
   select,input[type=range]{width:100%;font:inherit}
-  .fixed{padding:9px 0;font-size:15px}
-  select{padding:9px 10px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink)}
-  .check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);margin:4px 0 22px}
-  .check input{width:16px;height:16px;margin:0}
+  select{padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:#fff;color:var(--ink)}
+  .check{display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink);margin:6px 0 24px}
+  .check input{width:16px;height:16px;margin:0;accent-color:var(--green)}
+  input[type=range]{accent-color:var(--green)}
   .actions{display:flex;gap:10px}
-  button{font:inherit;font-size:15px;padding:11px 20px;border-radius:7px;border:1px solid transparent;cursor:pointer}
-  #start{background:var(--accent);color:#fff}
+  button{font:inherit;font-size:15px;font-weight:600;padding:12px 22px;border-radius:8px;border:1px solid transparent;cursor:pointer}
+  #start{background:var(--gold);color:var(--green-deep)}
+  #start:hover{background:var(--gold-deep)}
   #start:disabled{opacity:.5;cursor:default}
   #stop{background:transparent;border-color:var(--rule);color:var(--ink)}
   #stop:disabled{opacity:.4;cursor:default}
-  .status{margin-top:22px;padding:12px 14px;background:var(--panel);border-left:3px solid var(--accent);font-size:14px;line-height:1.5;border-radius:0 6px 6px 0}
-  .status.warn{border-left-color:#c2481f}
-  .note{margin-top:28px;font-size:13px;color:var(--muted);line-height:1.55}
-  .note p{margin:0 0 8px}
-  #inlineBar{display:none;position:fixed;top:0;left:0;right:0;height:130px;z-index:10}
-  button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .status{margin-top:22px;padding:12px 14px;background:var(--tint);border-left:3px solid var(--green);font-size:14px;line-height:1.5;border-radius:0 8px 8px 0}
+  .status.warn{border-left-color:#b23a1d;background:#fbeeea}
+  .how ol{margin:0;padding-left:20px;line-height:1.6;font-size:14px}
+  .how li{margin-bottom:10px}
+  .how li b{color:var(--green);font-weight:600}
+  .fine{margin-top:22px;padding-top:16px;border-top:1px solid var(--rule);font-size:13px;color:var(--muted);line-height:1.55}
+  .fine p{margin:0 0 8px}
+  #inlineBar{display:none;position:fixed;top:0;left:0;right:0;height:150px;z-index:10}
+  button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+  @media (max-width:720px){main{grid-template-columns:1fr}.head{flex-direction:column;align-items:flex-start}.head h1{font-size:30px}}
 </style>
 </head>
 <body>
-<main>
-  <h1>Live translated captions</h1>
-  <p class="lead">Listens to the microphone while the teacher speaks English and shows Spanish captions in a bar you can keep on top of your slides. Translation runs on this computer.</p>
+<header>
+  <div class="head">
+    <img src="logo.jpg" alt="West High School Pride crest">
+    <div>
+      <p class="school">West High School</p>
+      <h1>Live Caption Translation</h1>
+    </div>
+  </div>
+</header>
 
-  <div class="grid">
-    <div>
-      <label>Languages</label>
-      <div class="fixed">English spoken → Spanish captions</div>
+<main>
+  <section class="panel">
+    <h2>Set up captions</h2>
+    <p class="lead">Speak English into the microphone and translated captions appear in a bar that stays on top of your slides.</p>
+
+    <div class="field">
+      <label for="tgt">Caption language</label>
+      <select id="tgt">
+        <option value="es" selected>Spanish (Latin America)</option>
+        <option value="es-ES">Spanish (Spain)</option>
+        <option value="pa">Punjabi</option>
+        <option value="tl">Filipino (Tagalog)</option>
+        <option value="vi">Vietnamese</option>
+        <option value="ar">Arabic</option>
+        <option value="zh">Chinese (Simplified)</option>
+        <option value="fr">French</option>
+        <option value="en">English only (no translation)</option>
+      </select>
     </div>
-    <div>
-      <label for="size">Caption size</label>
-      <input id="size" type="range" min="22" max="56" value="34">
-    </div>
-    <div>
+    <div class="field">
       <label for="mic">Microphone</label>
       <select id="mic"><option value="">Default</option></select>
     </div>
-  </div>
+    <div class="field">
+      <label for="size">Caption size</label>
+      <input id="size" type="range" min="20" max="64" value="34">
+    </div>
 
-  <label class="check"><input id="showOrig" type="checkbox"> Also show the English words, smaller, under the caption</label>
+    <label class="check"><input id="showOrig" type="checkbox"> Also show the English words, smaller, under the caption</label>
 
-  <div class="actions">
-    <button id="start">Start captions</button>
-    <button id="stop" disabled>Stop</button>
-  </div>
+    <div class="actions">
+      <button id="start">Start captions</button>
+      <button id="stop" disabled>Stop</button>
+    </div>
 
-  <div id="status" class="status">Checking what this browser supports…</div>
+    <div id="status" class="status">Checking what this browser supports…</div>
+  </section>
 
-  <div class="note">
-    <p>Drag the caption window to the top of the screen once it opens. It stays above other windows, including a full-screen slideshow.</p>
-    <p>Speech is transcribed by Chrome's speech service (the same one Google Slides captions use). The translation model is downloaded once and then runs offline.</p>
-  </div>
+  <aside class="panel how">
+    <h2>How it works</h2>
+    <ol>
+      <li><b>Start captions</b> and allow the microphone the first time Chrome asks.</li>
+      <li>A dark caption bar opens. <b>Drag it to the top</b> of the screen. It stays above everything, including a full-screen slideshow.</li>
+      <li>Start your slideshow and teach as normal. Captions run about a second behind you.</li>
+      <li>Hover over the bar for quick controls: text size, English underneath, lighter background.</li>
+      <li>Come back to this tab and press <b>Stop</b> when you're done.</li>
+    </ol>
+    <div class="fine">
+      <p>A headset or lapel mic is much more accurate than the laptop's built-in mic.</p>
+      <p>Speech is transcribed by Chrome's speech service, the same one Google Slides captions use. Translation runs on this computer; the language model downloads once, then works offline.</p>
+      <p>Requires Chrome 138 or newer on a laptop or desktop.</p>
+    </div>
+  </aside>
 </main>
 
 <div id="inlineBar"></div>
@@ -73,20 +118,42 @@
 const $ = id => document.getElementById(id);
 
 const BAR_CSS = `
-  html,body{margin:0;height:100%;background:#0f1316;color:#f7f7f2;font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;overflow:hidden}
-  .bar{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:10px 26px 14px}
+  html,body{margin:0;height:100%;background:transparent;font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;overflow:hidden}
+  .bar{position:relative;height:100%;background:rgba(15,19,22,var(--bg,.96));color:#f7f7f2;overflow:hidden}
+  .stack{position:absolute;left:26px;right:26px;bottom:12px}
   .prev{font-size:calc(var(--size,34px)*.72);line-height:1.25;color:#a3aaa8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .live{font-size:var(--size,34px);line-height:1.22;font-weight:500;margin-top:2px;min-height:1.22em;overflow-wrap:anywhere}
   .orig{display:none;font-size:15px;color:#8a9290;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .orig.on{display:block}
   .dot{position:absolute;top:10px;right:12px;width:9px;height:9px;border-radius:50%;background:#d84b34}
   .dot.idle{background:#4b5358}
+  .ctl{position:absolute;top:6px;left:10px;display:flex;gap:6px;opacity:0;transition:opacity .15s}
+  .bar:hover .ctl,.ctl:focus-within{opacity:1}
+  .ctl button{font:inherit;font-size:13px;padding:3px 9px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#f7f7f2;cursor:pointer}
+  .ctl button:hover{background:rgba(255,255,255,.18)}
+  .ctl button.on{background:#f7f7f2;color:#0f1316}
 `;
-const BAR_HTML = `<div class="bar"><div class="dot idle" id="dot"></div><div class="prev" id="prev"></div><div class="live" id="live"></div><div class="orig" id="orig"></div></div>`;
+const BAR_HTML = `<div class="bar">
+  <div class="ctl">
+    <button id="smaller" title="Smaller text">A−</button>
+    <button id="larger" title="Larger text">A+</button>
+    <button id="toggleOrig" title="Show English underneath">EN</button>
+    <button id="toggleBg" title="Lighter background">Light</button>
+  </div>
+  <div class="dot idle" id="dot"></div>
+  <div class="stack"><div class="prev" id="prev"></div><div class="live" id="live"></div><div class="orig" id="orig"></div></div>
+</div>`;
 
 let rec = null, translator = null, pip = null, barDoc = null;
 let running = false, seq = 0, previewTimer = null;
 let statusEl = $('status');
+
+const prefs = Object.assign({ size: 34, showOrig: false, lightBg: false, tgt: 'es' }, JSON.parse(localStorage.getItem('captionPrefs') || '{}'));
+function savePrefs() { localStorage.setItem('captionPrefs', JSON.stringify(prefs)); applyBarPrefs(); }
+$('size').value = prefs.size;
+$('showOrig').checked = prefs.showOrig;
+if ([...$('tgt').options].some(o => o.value === prefs.tgt)) $('tgt').value = prefs.tgt;
+$('tgt').addEventListener('change', () => { prefs.tgt = $('tgt').value; savePrefs(); });
 
 function setStatus(msg, warn) {
   statusEl.textContent = msg;
@@ -105,9 +172,9 @@ const hasPip = 'documentPictureInPicture' in window;
     return;
   }
   if (!hasTranslator) {
-    setStatus('Speech recognition works, but built-in translation is not available here. You need Chrome 138 or newer (or Edge 148 or newer) on a desktop computer. Captions will show in English only.', true);
+    setStatus('Speech recognition works, but built-in translation is not available here. You need Chrome 138 or newer on a laptop or desktop. Captions will show in English only.', true);
   } else {
-    setStatus('Ready. Press Start captions.');
+    setStatus('Ready. Choose a caption language and press Start captions.');
   }
   try {
     const devs = await navigator.mediaDevices.enumerateDevices();
@@ -121,25 +188,29 @@ const hasPip = 'documentPictureInPicture' in window;
 // ----- translation -----
 async function makeTranslator(src, tgt) {
   if (!hasTranslator || src === tgt) return null;
-  const opts = { sourceLanguage: src, targetLanguage: tgt };
-  let avail = 'unavailable';
-  try { avail = await Translator.availability(opts); } catch {}
-  if (avail === 'unavailable') {
-    setStatus('Chrome can\'t translate English to Spanish on this computer. Captions will show in English only.', true);
-    return null;
+  const name = $('tgt').selectedOptions[0].text;
+  // Try the exact code first, then the base language (e.g. es-ES -> es) if Chrome doesn't have the regional model.
+  const candidates = tgt.includes('-') ? [tgt, tgt.split('-')[0]] : [tgt];
+  for (const target of candidates) {
+    const opts = { sourceLanguage: src, targetLanguage: target };
+    let avail = 'unavailable';
+    try { avail = await Translator.availability(opts); } catch {}
+    if (avail === 'unavailable') continue;
+    if (avail !== 'available') setStatus('Downloading the ' + name + ' translation model. This happens once.');
+    try {
+      const t = await Translator.create({
+        ...opts,
+        monitor(m) { m.addEventListener('downloadprogress', e => setStatus('Downloading translation model… ' + Math.round(e.loaded * 100) + '%')); }
+      });
+      if (target !== tgt) setStatus('Chrome has no separate ' + name + ' model, so it is using general ' + name.split(' ')[0] + '.');
+      return t;
+    } catch (err) {
+      setStatus('Could not start the translator: ' + err.message, true);
+      return null;
+    }
   }
-  if (avail !== 'available') setStatus('Downloading the English → Spanish translation model. This happens once.');
-  try {
-    return await Translator.create({
-      ...opts,
-      monitor(m) {
-        m.addEventListener('downloadprogress', e => setStatus(`Downloading translation model… ${Math.round(e.loaded * 100)}%`));
-      }
-    });
-  } catch (err) {
-    setStatus('Could not start the translator: ' + err.message, true);
-    return null;
-  }
+  setStatus('Chrome can\'t translate to ' + name + ' on this computer. Captions will show in English only.', true);
+  return null;
 }
 
 async function translate(text) {
@@ -158,14 +229,26 @@ function setLive(on) {
   if (barDoc) barDoc.getElementById('dot').classList.toggle('idle', !on);
 }
 function applyBarPrefs() {
+  $('size').value = prefs.size;
+  $('showOrig').checked = prefs.showOrig;
   if (!barDoc) return;
-  barDoc.documentElement.style.setProperty('--size', $('size').value + 'px');
-  barDoc.getElementById('orig').classList.toggle('on', $('showOrig').checked);
+  const root = barDoc.documentElement || barDoc.host;
+  root.style.setProperty('--size', prefs.size + 'px');
+  root.style.setProperty('--bg', prefs.lightBg ? '.72' : '.96');
+  barDoc.getElementById('orig').classList.toggle('on', prefs.showOrig);
+  barDoc.getElementById('toggleOrig').classList.toggle('on', prefs.showOrig);
+  barDoc.getElementById('toggleBg').classList.toggle('on', prefs.lightBg);
+}
+function wireBarControls() {
+  barDoc.getElementById('smaller').onclick = () => { prefs.size = Math.max(20, prefs.size - 3); savePrefs(); };
+  barDoc.getElementById('larger').onclick = () => { prefs.size = Math.min(64, prefs.size + 3); savePrefs(); };
+  barDoc.getElementById('toggleOrig').onclick = () => { prefs.showOrig = !prefs.showOrig; savePrefs(); };
+  barDoc.getElementById('toggleBg').onclick = () => { prefs.lightBg = !prefs.lightBg; savePrefs(); };
 }
 
 function requestPip() {
   // Must be called synchronously inside the click handler, before any await.
-  return documentPictureInPicture.requestWindow({ width: Math.min(screen.availWidth, 1500), height: 130 });
+  return documentPictureInPicture.requestWindow({ width: Math.min(screen.availWidth, 1500), height: 150 });
 }
 
 async function openBar(pipPromise) {
@@ -186,6 +269,7 @@ async function openBar(pipPromise) {
     barDoc = host.shadowRoot;
     setStatus('This browser can\'t open a floating window, so the bar is at the top of this page. Snap this window above the slides.', true);
   }
+  wireBarControls();
   applyBarPrefs();
 }
 
@@ -197,12 +281,23 @@ function closeBar() {
 
 // ----- speech -----
 let finalText = '';   // last committed translated sentence
+let lastFinalOrig = '';
+
+// Keep only the end of a long in-progress phrase so the newest words are never clipped.
+function tail(text) {
+  const width = barDoc && barDoc.getElementById('live') ? barDoc.getElementById('live').clientWidth : 1200;
+  const maxChars = Math.floor(width / (prefs.size * 0.52)) * 2;
+  if (text.length <= maxChars) return text;
+  const cut = text.slice(text.length - maxChars);
+  const sp = cut.indexOf(' ');
+  return '…' + (sp > 0 ? cut.slice(sp + 1) : cut);
+}
 function schedulePreview(text) {
   clearTimeout(previewTimer);
   previewTimer = setTimeout(async () => {
     const my = ++seq;
     const t = await translate(text);
-    if (my === seq) render(undefined, t, text);
+    if (my === seq) render(undefined, tail(t), text);
   }, 300);
 }
 async function commit(text) {
@@ -211,7 +306,8 @@ async function commit(text) {
   const t = await translate(text);
   if (my !== seq) return;
   finalText = t;
-  render(finalText, '', text);
+  lastFinalOrig = text;
+  render(tail(finalText), '', text);
 }
 
 function startRecognition(lang) {
@@ -231,6 +327,10 @@ function startRecognition(lang) {
       if (r.isFinal) commit(txt); else interim += ' ' + txt;
     }
     interim = interim.trim();
+    // Chrome sometimes re-sends the sentence it just finalized at the start of the next interim result.
+    if (lastFinalOrig && interim.toLowerCase().startsWith(lastFinalOrig.toLowerCase())) {
+      interim = interim.slice(lastFinalOrig.length).trim();
+    }
     if (interim) schedulePreview(interim);
   };
   rec.onerror = e => {
@@ -252,7 +352,7 @@ function startRecognition(lang) {
 // ----- controls -----
 async function start(pipPromise) {
   $('start').disabled = true;
-  const srcTag = 'en-US', src = 'en', tgt = 'es';
+  const srcTag = 'en-US', src = 'en', tgt = $('tgt').value;
 
   try { await openBar(pipPromise); } catch (err) {
     setStatus('Could not open the caption window: ' + err.message, true);
@@ -273,10 +373,11 @@ async function start(pipPromise) {
   }
 
   translator = await makeTranslator(src, tgt);
-  if (translator) setStatus('Captioning English → Spanish. Drag the bar to the top of the screen.');
+  if (translator) setStatus('Captioning English → ' + $('tgt').selectedOptions[0].text + '. Drag the bar to the top of the screen.');
+  else if (tgt === 'en') setStatus('Captioning in English. Drag the bar to the top of the screen.');
 
   running = true;
-  finalText = '';
+  finalText = ''; lastFinalOrig = '';
   render('', '', '');
   startRecognition(srcTag);
   $('stop').disabled = false;
@@ -304,8 +405,8 @@ $('start').addEventListener('click', () => {
   start(pipPromise);
 });
 $('stop').addEventListener('click', stop);
-$('size').addEventListener('input', applyBarPrefs);
-$('showOrig').addEventListener('change', applyBarPrefs);
+$('size').addEventListener('input', () => { prefs.size = +$('size').value; savePrefs(); });
+$('showOrig').addEventListener('change', () => { prefs.showOrig = $('showOrig').checked; savePrefs(); });
 window.addEventListener('beforeunload', stop);
 </script>
 </body>
