@@ -39,6 +39,8 @@
   .how ol{margin:0;padding-left:20px;line-height:1.6;font-size:14px}
   .how li{margin-bottom:10px}
   .how li b{color:var(--green);font-weight:600}
+  .tip{margin:20px 0 0;padding:12px 14px;background:#fff6d6;border-left:3px solid var(--gold-deep);border-radius:0 8px 8px 0;font-size:14px;line-height:1.5}
+  .tip b{color:var(--green)}
   .fine{margin-top:22px;padding-top:16px;border-top:1px solid var(--rule);font-size:13px;color:var(--muted);line-height:1.55}
   .fine p{margin:0 0 8px}
   #inlineBar{display:none;position:fixed;top:0;left:0;right:0;height:150px;z-index:10}
@@ -105,6 +107,7 @@
       <li>Hover over the bar for quick controls: text size, English underneath, lighter background.</li>
       <li>Come back to this tab and press <b>Stop</b> when you're done.</li>
     </ol>
+    <p class="tip"><b>If the caption window doesn't appear,</b> refresh the page and try again, or check that Chrome has permission to use your microphone (click the icon to the left of the web address).</p>
     <div class="fine">
       <p>A headset or lapel mic is much more accurate than the laptop's built-in mic.</p>
       <p>Speech is transcribed by Chrome's speech service, the same one Google Slides captions use. Translation runs on this computer; the language model downloads once, then works offline.</p>
@@ -195,7 +198,7 @@ async function markLanguageAvailability() {
     const codes = o.value.includes('-') ? [o.value, o.value.split('-')[0]] : [o.value];
     let ok = false;
     for (const c of codes) {
-      try { if (await Translator.availability({ sourceLanguage: 'en', targetLanguage: c }) !== 'unavailable') { ok = true; break; } } catch {}
+      try { if (await Translator.availability({ sourceLanguage: 'en', targetLanguage: c }) !== 'unavailable') { ok = true; o.dataset.code = c; break; } } catch {}
     }
     if (!ok) { o.disabled = true; o.textContent += ' — not available'; }
   }
@@ -206,31 +209,28 @@ async function markLanguageAvailability() {
 }
 
 // ----- translation -----
-async function makeTranslator(src, tgt) {
-  if (!hasTranslator || src === tgt) return null;
+function requestTranslator(tgt) {
+  // Must be called synchronously inside the click handler: creating a translator
+  // that still needs to download its model requires user activation.
+  if (!hasTranslator || tgt === 'en') return null;
+  const opt = $('tgt').selectedOptions[0];
+  const code = opt.dataset.code || (tgt.includes('-') ? tgt.split('-')[0] : tgt);
+  return Translator.create({
+    sourceLanguage: 'en',
+    targetLanguage: code,
+    monitor(m) { m.addEventListener('downloadprogress', e => setStatus('Downloading ' + opt.text + ' translation model… ' + Math.round(e.loaded * 100) + '% (first time only)')); }
+  });
+}
+
+async function makeTranslator(translatorPromise) {
+  if (!translatorPromise) return null;
   const name = $('tgt').selectedOptions[0].text;
-  // Try the exact code first, then the base language (e.g. es-ES -> es) if Chrome doesn't have the regional model.
-  const candidates = tgt.includes('-') ? [tgt, tgt.split('-')[0]] : [tgt];
-  for (const target of candidates) {
-    const opts = { sourceLanguage: src, targetLanguage: target };
-    let avail = 'unavailable';
-    try { avail = await Translator.availability(opts); } catch {}
-    if (avail === 'unavailable') continue;
-    if (avail !== 'available') setStatus('Downloading the ' + name + ' translation model. This happens once.');
-    try {
-      const t = await Translator.create({
-        ...opts,
-        monitor(m) { m.addEventListener('downloadprogress', e => setStatus('Downloading translation model… ' + Math.round(e.loaded * 100) + '%')); }
-      });
-      if (target !== tgt) setStatus('Chrome has no separate ' + name + ' model, so it is using general ' + name.split(' ')[0] + '.');
-      return t;
-    } catch (err) {
-      setStatus('Could not start the translator: ' + err.message, true);
-      return null;
-    }
+  try {
+    return await translatorPromise;
+  } catch (err) {
+    setStatus('Chrome could not start ' + name + ' translation: ' + err.message + ' Captions will show in English only.', true);
+    return null;
   }
-  setStatus('Chrome can\'t translate to ' + name + ' on this computer. Captions will show in English only.', true);
-  return null;
 }
 
 async function translate(text) {
@@ -370,9 +370,10 @@ function startRecognition(lang) {
 }
 
 // ----- controls -----
-async function start(pipPromise) {
+async function start(pipPromise, translatorPromise) {
   $('start').disabled = true;
-  const srcTag = 'en-US', src = 'en', tgt = $('tgt').value;
+  const srcTag = 'en-US', tgt = $('tgt').value;
+  if (translatorPromise) translatorPromise.catch(() => {}); // handled in makeTranslator
 
   try { await openBar(pipPromise); } catch (err) {
     setStatus('Could not open the caption window: ' + err.message, true);
@@ -387,12 +388,13 @@ async function start(pipPromise) {
     s.getTracks().forEach(t => t.stop());
   } catch {
     setStatus('Microphone access was blocked. Allow the microphone for this page and try again.', true);
+    if (translatorPromise) translatorPromise.then(t => t.destroy()).catch(() => {});
     closeBar();
     $('start').disabled = false;
     return;
   }
 
-  translator = await makeTranslator(src, tgt);
+  translator = await makeTranslator(translatorPromise);
   if (translator) setStatus('Captioning English → ' + $('tgt').selectedOptions[0].text + '. Drag the bar to the top of the screen.');
   else if (tgt === 'en') setStatus('Captioning in English. Drag the bar to the top of the screen.');
 
@@ -418,11 +420,12 @@ function stop() {
 $('start').addEventListener('click', () => {
   // Request the floating window as the very first thing, while the click still
   // counts as user activation. Everything else waits on it.
-  let pipPromise = null;
+  let pipPromise = null, translatorPromise = null;
   if (hasPip) {
     try { pipPromise = requestPip(); } catch (err) { pipPromise = Promise.reject(err); }
   }
-  start(pipPromise);
+  try { translatorPromise = requestTranslator($('tgt').value); } catch (err) { translatorPromise = Promise.reject(err); }
+  start(pipPromise, translatorPromise);
 });
 $('stop').addEventListener('click', stop);
 $('size').addEventListener('input', () => { prefs.size = +$('size').value; savePrefs(); });
