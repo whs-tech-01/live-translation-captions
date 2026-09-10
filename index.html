@@ -180,6 +180,7 @@ const BAR_HTML = `<div class="bar">
 let rec = null, pip = null, barDoc = null;
 let running = false, seq = 0, previewTimer = null;
 let statusEl = $('status');
+let downloading = false;
 
 const prefs = Object.assign({ size: 34, showOrig: false, lightBg: false, tgt: 'es', tgt2: '' }, JSON.parse(localStorage.getItem('captionPrefs') || '{}'));
 function savePrefs() { localStorage.setItem('captionPrefs', JSON.stringify(prefs)); applyBarPrefs(); }
@@ -193,7 +194,7 @@ $('tgt2').addEventListener('change', () => { prefs.tgt2 = $('tgt2').value; saveP
 // Start downloading a language's model as soon as it's picked, so Start is instant.
 async function prewarm(selectId) {
   let p;
-  try { p = requestTranslator(selectId); } catch { return; }
+  try { p = requestTranslator(selectId, (name, pct) => { if (!running) setStatus('Downloading ' + name + '… ' + pct + '%'); }); } catch { return; }
   if (!p) return;
   const name = $(selectId).selectedOptions[0].text;
   try {
@@ -202,6 +203,7 @@ async function prewarm(selectId) {
     if (!running) setStatus(name + ' is ready. Press Start captions.');
   } catch { /* needs a real click; Start will handle it */ }
 }
+['tgt', 'tgt2'].forEach(id => $(id).addEventListener('change', () => { if (!running && !downloading) $('start').textContent = 'Start captions'; }));
 function showSecondLang(on) {
   $('secondLang').classList.toggle('on', on);
   $('addLang').style.display = on ? 'none' : '';
@@ -250,7 +252,10 @@ async function markLanguageAvailability() {
     const codes = o.value.includes('-') ? [o.value, o.value.split('-')[0]] : [o.value];
     let ok = false;
     for (const c of codes) {
-      try { if (await Translator.availability({ sourceLanguage: 'en', targetLanguage: c }) !== 'unavailable') { ok = true; o.dataset.code = c; break; } } catch {}
+      try {
+        const a = await Translator.availability({ sourceLanguage: 'en', targetLanguage: c });
+        if (a !== 'unavailable') { ok = true; o.dataset.code = c; o.dataset.avail = a; break; }
+      } catch {}
     }
     if (!ok) { o.disabled = true; o.textContent += ' — not available'; }
   }
@@ -261,7 +266,7 @@ async function markLanguageAvailability() {
 }
 
 // ----- translation -----
-function requestTranslator(selectId) {
+function requestTranslator(selectId, onProgress) {
   // Must be called synchronously inside the click handler: creating a translator
   // that still needs to download its model requires user activation.
   const opt = $(selectId).selectedOptions[0];
@@ -271,8 +276,13 @@ function requestTranslator(selectId) {
   return Translator.create({
     sourceLanguage: 'en',
     targetLanguage: code,
-    monitor(m) { m.addEventListener('downloadprogress', e => setStatus('Downloading ' + opt.text + ' translation model… ' + Math.round(e.loaded * 100) + '% (first time only)')); }
-  });
+    monitor(m) { m.addEventListener('downloadprogress', e => (onProgress || (() => {}))(opt.text, Math.round(e.loaded * 100))); }
+  }).then(t => { opt.dataset.avail = 'available'; return t; });
+}
+function needsDownload(selectId) {
+  const opt = $(selectId).selectedOptions[0];
+  if (!hasTranslator || opt.value === 'en' || opt.value === '') return false;
+  return opt.dataset.avail !== 'available';
 }
 
 async function makeTranslator(translatorPromise, selectId) {
@@ -476,6 +486,7 @@ async function start(pipPromise, translatorPromises) {
   render('', ['', ''], '');
   applyBarPrefs();
   startRecognition(srcTag);
+  $('start').textContent = 'Start captions';
   $('stop').disabled = false;
 }
 
@@ -487,13 +498,42 @@ function stop() {
   translators.forEach(t => { if (t) { try { t.destroy(); } catch {} } }); translators = [null, null];
   closeBar();
   $('start').disabled = false;
+  $('start').textContent = 'Start captions';
   $('stop').disabled = true;
   setStatus('Stopped.');
 }
 
 $('start').addEventListener('click', () => {
-  // Order matters: translator downloads need user activation, and requesting the
-  // floating window consumes it. So create translators first, then ask for the window.
+  if (downloading) return;
+  const missing = ['tgt', 'tgt2'].filter(needsDownload);
+
+  if (missing.length) {
+    // Stage 1: download the model(s). The button shows progress, then turns into "Open caption bar".
+    downloading = true;
+    $('start').disabled = true;
+    $('start').textContent = 'Downloading…';
+    setStatus('Downloading the translation model. This only happens the first time a language is used on this computer.');
+    const promises = missing.map(id => {
+      try { return requestTranslator(id, (name, pct) => { $('start').textContent = 'Downloading ' + name + '… ' + pct + '%'; }); }
+      catch (err) { return Promise.reject(err); }
+    });
+    Promise.allSettled(promises).then(results => {
+      results.forEach(r => { if (r.status === 'fulfilled' && r.value) r.value.destroy(); });
+      const failed = results.find(r => r.status === 'rejected');
+      downloading = false;
+      $('start').disabled = false;
+      if (failed) {
+        $('start').textContent = 'Start captions';
+        setStatus('Could not download the translation model: ' + failed.reason.message, true);
+      } else {
+        $('start').textContent = 'Open caption bar';
+        setStatus('Ready. Press Open caption bar.');
+      }
+    });
+    return;
+  }
+
+  // Stage 2 (or the only stage when models are already here): open the bar and go.
   const translatorPromises = ['tgt', 'tgt2'].map(id => {
     try { return requestTranslator(id); } catch (err) { return Promise.reject(err); }
   });
