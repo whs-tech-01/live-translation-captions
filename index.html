@@ -163,17 +163,19 @@ function applyBarPrefs() {
   barDoc.getElementById('orig').classList.toggle('on', $('showOrig').checked);
 }
 
-async function openBar() {
-  if (hasPip) {
-    pip = await documentPictureInPicture.requestWindow({
-      width: Math.min(screen.availWidth, 1500),
-      height: 130
-    });
+function requestPip() {
+  // Must be called synchronously inside the click handler, before any await.
+  return documentPictureInPicture.requestWindow({ width: Math.min(screen.availWidth, 1500), height: 130 });
+}
+
+async function openBar(pipPromise) {
+  if (pipPromise) {
+    pip = await pipPromise;
     const st = pip.document.createElement('style');
     st.textContent = BAR_CSS;
     pip.document.head.append(st);
     pip.document.body.innerHTML = BAR_HTML;
-    pip.addEventListener('pagehide', () => { pip = null; barDoc = null; stop(); });
+    pip.addEventListener('pagehide', () => { pip = null; barDoc = null; if (running) stop(); });
     barDoc = pip.document;
   } else {
     // Fallback: bar pinned to the top of this page. Keep this window on top manually.
@@ -248,30 +250,30 @@ function startRecognition(lang) {
 }
 
 // ----- controls -----
-async function start() {
+async function start(pipPromise) {
   $('start').disabled = true;
   const srcTag = 'en-US', src = 'en', tgt = 'es';
 
-  // Ask for the mic first so the permission prompt appears before the bar opens,
-  // and so the chosen device is the one Chrome uses.
+  try { await openBar(pipPromise); } catch (err) {
+    setStatus('Could not open the caption window: ' + err.message, true);
+    $('start').disabled = false;
+    return;
+  }
+  render('', 'Setting up…', '');
+
   try {
     const constraints = $('mic').value ? { audio: { deviceId: { exact: $('mic').value } } } : { audio: true };
     const s = await navigator.mediaDevices.getUserMedia(constraints);
     s.getTracks().forEach(t => t.stop());
   } catch {
     setStatus('Microphone access was blocked. Allow the microphone for this page and try again.', true);
+    closeBar();
     $('start').disabled = false;
     return;
   }
 
   translator = await makeTranslator(src, tgt);
   if (translator) setStatus('Captioning English → Spanish. Drag the bar to the top of the screen.');
-
-  try { await openBar(); } catch (err) {
-    setStatus('Could not open the caption window: ' + err.message, true);
-    $('start').disabled = false;
-    return;
-  }
 
   running = true;
   finalText = '';
@@ -292,7 +294,15 @@ function stop() {
   setStatus('Stopped.');
 }
 
-$('start').addEventListener('click', start);
+$('start').addEventListener('click', () => {
+  // Request the floating window as the very first thing, while the click still
+  // counts as user activation. Everything else waits on it.
+  let pipPromise = null;
+  if (hasPip) {
+    try { pipPromise = requestPip(); } catch (err) { pipPromise = Promise.reject(err); }
+  }
+  start(pipPromise);
+});
 $('stop').addEventListener('click', stop);
 $('size').addEventListener('input', applyBarPrefs);
 $('showOrig').addEventListener('change', applyBarPrefs);
