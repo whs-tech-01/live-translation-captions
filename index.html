@@ -27,6 +27,14 @@
   .check{display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink);margin:6px 0 24px}
   .check input{width:16px;height:16px;margin:0;accent-color:var(--green)}
   input[type=range]{accent-color:var(--green)}
+  .link{background:none;border:0;padding:0;margin:-8px 0 20px;color:var(--green);font-weight:600;font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .link:hover{color:var(--green-deep)}
+  .second-lang{display:none}
+  .second-lang.on{display:block}
+  .inline{display:flex;gap:8px;align-items:center}
+  .inline select{flex:1}
+  .icon{width:40px;height:40px;padding:0;border-radius:8px;border:1px solid var(--rule);background:#fff;font-size:20px;line-height:1;color:var(--muted);cursor:pointer}
+  .icon:hover{color:#b23a1d;border-color:#b23a1d}
   .actions{display:flex;gap:10px}
   button{font:inherit;font-size:15px;font-weight:600;padding:12px 22px;border-radius:8px;border:1px solid transparent;cursor:pointer}
   #start{background:var(--gold);color:var(--green-deep)}
@@ -41,8 +49,7 @@
   .how li b{color:var(--green);font-weight:600}
   .tip{margin:20px 0 0;padding:12px 14px;background:#fff6d6;border-left:3px solid var(--gold-deep);border-radius:0 8px 8px 0;font-size:14px;line-height:1.5}
   .tip b{color:var(--green)}
-  .fine{margin-top:22px;padding-top:16px;border-top:1px solid var(--rule);font-size:13px;color:var(--muted);line-height:1.55}
-  .fine p{margin:0 0 8px}
+  .mic-tip{margin:18px 0 0;font-size:14px;color:var(--muted);line-height:1.5}
   #inlineBar{display:none;position:fixed;top:0;left:0;right:0;height:150px;z-index:10}
   button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--green);outline-offset:2px}
   @media (max-width:720px){main{grid-template-columns:1fr}.head{flex-direction:column;align-items:flex-start}.head h1{font-size:30px}}
@@ -79,6 +86,26 @@
         <option value="en">English only (no translation)</option>
       </select>
     </div>
+    <button id="addLang" class="link" type="button">+ Add a second language</button>
+    <div class="field second-lang" id="secondLang">
+      <label for="tgt2">Second caption language</label>
+      <div class="inline">
+        <select id="tgt2">
+          <option value="">Choose a language…</option>
+          <option value="es">Spanish (Latin America)</option>
+          <option value="es-ES">Spanish (Spain)</option>
+          <option value="pa">Punjabi</option>
+          <option value="tl">Filipino (Tagalog)</option>
+          <option value="vi">Vietnamese</option>
+          <option value="th">Thai</option>
+          <option value="ar">Arabic</option>
+          <option value="zh">Chinese (Simplified)</option>
+          <option value="fr">French</option>
+          <option value="en">English (no translation)</option>
+        </select>
+        <button id="removeLang" class="icon" type="button" title="Remove second language" aria-label="Remove second language">×</button>
+      </div>
+    </div>
     <div class="field">
       <label for="mic">Microphone</label>
       <select id="mic"><option value="">Default</option></select>
@@ -101,18 +128,14 @@
   <aside class="panel how">
     <h2>How it works</h2>
     <ol>
-      <li><b>Start captions</b> and allow the microphone the first time Chrome asks.</li>
-      <li>A dark caption bar opens. <b>Drag it to the top</b> of the screen. It stays above everything, including a full-screen slideshow.</li>
-      <li>Start your slideshow and teach as normal. Captions run about a second behind you.</li>
-      <li>Hover over the bar for quick controls: text size, English underneath, lighter background.</li>
-      <li>Come back to this tab and press <b>Stop</b> when you're done.</li>
+      <li>Choose a caption language. Want two on screen? Click <b>Add a second language</b>.</li>
+      <li>Press <b>Start captions</b> and allow the microphone if Chrome asks.</li>
+      <li>A caption bar opens. <b>Drag it to the top</b> of the screen — it stays on top of your slideshow.</li>
+      <li>Teach as normal. Hover over the bar to change text size or show the English underneath.</li>
+      <li>Press <b>Stop</b> here when you're done.</li>
     </ol>
     <p class="tip"><b>If the caption window doesn't appear,</b> refresh the page and try again, or check that Chrome has permission to use your microphone (click the icon to the left of the web address).</p>
-    <div class="fine">
-      <p>A headset or lapel mic is much more accurate than the laptop's built-in mic.</p>
-      <p>Speech is transcribed by Chrome's speech service, the same one Google Slides captions use. Translation runs on this computer; the language model downloads once, then works offline.</p>
-      <p>Requires Chrome 138 or newer on a laptop or desktop.</p>
-    </div>
+    <p class="mic-tip">A headset or lapel mic is much more accurate than the laptop's built-in mic.</p>
   </aside>
 </main>
 
@@ -125,6 +148,8 @@ const BAR_CSS = `
   html,body{margin:0;height:100%;background:transparent;font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;overflow:hidden}
   .bar{position:relative;height:100%;background:rgba(15,19,22,var(--bg,.96));color:#f7f7f2;overflow:hidden}
   .stack{position:absolute;left:26px;right:26px;bottom:12px}
+  .row.second{display:none;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.15)}
+  .row.second.on{display:block}
   .prev{font-size:calc(var(--size,34px)*.72);line-height:1.25;color:#a3aaa8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .live{font-size:var(--size,34px);line-height:1.22;font-weight:500;margin-top:2px;min-height:1.22em;overflow-wrap:anywhere}
   .orig{display:none;font-size:15px;color:#8a9290;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -145,19 +170,46 @@ const BAR_HTML = `<div class="bar">
     <button id="toggleBg" title="Lighter background">Light</button>
   </div>
   <div class="dot idle" id="dot"></div>
-  <div class="stack"><div class="prev" id="prev"></div><div class="live" id="live"></div><div class="orig" id="orig"></div></div>
+  <div class="stack">
+    <div class="row"><div class="prev" id="prev0"></div><div class="live" id="live0"></div></div>
+    <div class="row second" id="row1"><div class="live" id="live1"></div></div>
+    <div class="orig" id="orig"></div>
+  </div>
 </div>`;
 
-let rec = null, translator = null, pip = null, barDoc = null;
+let rec = null, pip = null, barDoc = null;
 let running = false, seq = 0, previewTimer = null;
 let statusEl = $('status');
 
-const prefs = Object.assign({ size: 34, showOrig: false, lightBg: false, tgt: 'es' }, JSON.parse(localStorage.getItem('captionPrefs') || '{}'));
+const prefs = Object.assign({ size: 34, showOrig: false, lightBg: false, tgt: 'es', tgt2: '' }, JSON.parse(localStorage.getItem('captionPrefs') || '{}'));
 function savePrefs() { localStorage.setItem('captionPrefs', JSON.stringify(prefs)); applyBarPrefs(); }
 $('size').value = prefs.size;
 $('showOrig').checked = prefs.showOrig;
 if ([...$('tgt').options].some(o => o.value === prefs.tgt)) $('tgt').value = prefs.tgt;
-$('tgt').addEventListener('change', () => { prefs.tgt = $('tgt').value; savePrefs(); });
+if ([...$('tgt2').options].some(o => o.value === prefs.tgt2)) $('tgt2').value = prefs.tgt2;
+$('tgt').addEventListener('change', () => { prefs.tgt = $('tgt').value; savePrefs(); prewarm('tgt'); });
+$('tgt2').addEventListener('change', () => { prefs.tgt2 = $('tgt2').value; savePrefs(); prewarm('tgt2'); });
+
+// Start downloading a language's model as soon as it's picked, so Start is instant.
+async function prewarm(selectId) {
+  let p;
+  try { p = requestTranslator(selectId); } catch { return; }
+  if (!p) return;
+  const name = $(selectId).selectedOptions[0].text;
+  try {
+    const t = await p;
+    t.destroy();
+    if (!running) setStatus(name + ' is ready. Press Start captions.');
+  } catch { /* needs a real click; Start will handle it */ }
+}
+function showSecondLang(on) {
+  $('secondLang').classList.toggle('on', on);
+  $('addLang').style.display = on ? 'none' : '';
+  if (!on) { $('tgt2').value = ''; prefs.tgt2 = ''; savePrefs(); }
+}
+$('addLang').addEventListener('click', () => { showSecondLang(true); $('tgt2').focus(); });
+$('removeLang').addEventListener('click', () => showSecondLang(false));
+if (prefs.tgt2) showSecondLang(true);
 
 function setStatus(msg, warn) {
   statusEl.textContent = msg;
@@ -193,8 +245,8 @@ const hasPip = 'documentPictureInPicture' in window;
 // Ask Chrome which caption languages it can actually translate to on this machine.
 async function markLanguageAvailability() {
   if (!hasTranslator) return;
-  for (const o of $('tgt').options) {
-    if (o.value === 'en') continue;
+  for (const o of [...$('tgt').options, ...$('tgt2').options]) {
+    if (o.value === 'en' || o.value === '') continue;
     const codes = o.value.includes('-') ? [o.value, o.value.split('-')[0]] : [o.value];
     let ok = false;
     for (const c of codes) {
@@ -209,11 +261,12 @@ async function markLanguageAvailability() {
 }
 
 // ----- translation -----
-function requestTranslator(tgt) {
+function requestTranslator(selectId) {
   // Must be called synchronously inside the click handler: creating a translator
   // that still needs to download its model requires user activation.
-  if (!hasTranslator || tgt === 'en') return null;
-  const opt = $('tgt').selectedOptions[0];
+  const opt = $(selectId).selectedOptions[0];
+  const tgt = opt.value;
+  if (!hasTranslator || tgt === 'en' || tgt === '') return null;
   const code = opt.dataset.code || (tgt.includes('-') ? tgt.split('-')[0] : tgt);
   return Translator.create({
     sourceLanguage: 'en',
@@ -222,27 +275,35 @@ function requestTranslator(tgt) {
   });
 }
 
-async function makeTranslator(translatorPromise) {
+async function makeTranslator(translatorPromise, selectId) {
   if (!translatorPromise) return null;
-  const name = $('tgt').selectedOptions[0].text;
+  const name = $(selectId).selectedOptions[0].text;
   try {
     return await translatorPromise;
   } catch (err) {
-    setStatus('Chrome could not start ' + name + ' translation: ' + err.message + ' Captions will show in English only.', true);
+    setStatus('Chrome could not start ' + name + ' translation: ' + err.message + ' That line will show English.', true);
     return null;
   }
 }
 
-async function translate(text) {
-  if (!translator) return text;
-  try { return await translator.translate(text); } catch { return text; }
+// translators[i] is null when that line is English or not set up
+let translators = [null, null];
+let lineCount = 1;
+async function translateAll(text) {
+  return Promise.all(translators.slice(0, lineCount).map(async t => {
+    if (!t) return text;
+    try { return await t.translate(text); } catch { return text; }
+  }));
 }
 
-// ----- caption bar -----
+// prev: dimmed previous sentence (primary line only). live: array of strings, one per language.
 function render(prev, live, orig) {
   if (!barDoc) return;
-  if (prev !== undefined) barDoc.getElementById('prev').textContent = prev;
-  if (live !== undefined) barDoc.getElementById('live').textContent = live;
+  if (prev !== undefined) barDoc.getElementById('prev0').textContent = prev;
+  if (live !== undefined) {
+    barDoc.getElementById('live0').textContent = live[0] ?? '';
+    barDoc.getElementById('live1').textContent = live[1] ?? '';
+  }
   if (orig !== undefined) barDoc.getElementById('orig').textContent = orig;
 }
 function setLive(on) {
@@ -256,6 +317,8 @@ function applyBarPrefs() {
   root.style.setProperty('--size', prefs.size + 'px');
   root.style.setProperty('--bg', prefs.lightBg ? '.72' : '.96');
   barDoc.getElementById('orig').classList.toggle('on', prefs.showOrig);
+  barDoc.getElementById('row1').classList.toggle('on', lineCount === 2);
+  barDoc.getElementById('prev0').style.display = lineCount === 2 ? 'none' : '';
   barDoc.getElementById('toggleOrig').classList.toggle('on', prefs.showOrig);
   barDoc.getElementById('toggleBg').classList.toggle('on', prefs.lightBg);
 }
@@ -268,7 +331,7 @@ function wireBarControls() {
 
 function requestPip() {
   // Must be called synchronously inside the click handler, before any await.
-  return documentPictureInPicture.requestWindow({ width: Math.min(screen.availWidth, 1500), height: 150 });
+  return documentPictureInPicture.requestWindow({ width: Math.min(screen.availWidth, 1500), height: $('tgt2').value ? 190 : 150 });
 }
 
 async function openBar(pipPromise) {
@@ -305,7 +368,7 @@ let lastFinalOrig = '';
 
 // Keep only the end of a long in-progress phrase so the newest words are never clipped.
 function tail(text) {
-  const width = barDoc && barDoc.getElementById('live') ? barDoc.getElementById('live').clientWidth : 1200;
+  const width = barDoc && barDoc.getElementById('live0') ? barDoc.getElementById('live0').clientWidth : 1200;
   const maxChars = Math.floor(width / (prefs.size * 0.52)) * 2;
   if (text.length <= maxChars) return text;
   const cut = text.slice(text.length - maxChars);
@@ -316,18 +379,20 @@ function schedulePreview(text) {
   clearTimeout(previewTimer);
   previewTimer = setTimeout(async () => {
     const my = ++seq;
-    const t = await translate(text);
-    if (my === seq) render(undefined, tail(t), text);
+    const t = await translateAll(text);
+    if (my === seq) render(undefined, t.map(tail), text);
   }, 300);
 }
 async function commit(text) {
   clearTimeout(previewTimer);
   const my = ++seq;
-  const t = await translate(text);
+  const t = await translateAll(text);
   if (my !== seq) return;
-  finalText = t;
+  finalText = t[0];
   lastFinalOrig = text;
-  render(tail(finalText), '', text);
+  // One language: finished sentence moves up to the dimmed line. Two languages: each line keeps its sentence until the next words arrive.
+  if (lineCount === 2) render(undefined, t.map(tail), text);
+  else render(tail(finalText), [''], text);
 }
 
 function startRecognition(lang) {
@@ -370,17 +435,22 @@ function startRecognition(lang) {
 }
 
 // ----- controls -----
-async function start(pipPromise, translatorPromise) {
+async function start(pipPromise, translatorPromises) {
   $('start').disabled = true;
-  const srcTag = 'en-US', tgt = $('tgt').value;
-  if (translatorPromise) translatorPromise.catch(() => {}); // handled in makeTranslator
+  const srcTag = 'en-US';
+  lineCount = $('tgt2').value ? 2 : 1;
+  translatorPromises.forEach(p => p && p.catch(() => {})); // handled in makeTranslator
 
   try { await openBar(pipPromise); } catch (err) {
-    setStatus('Could not open the caption window: ' + err.message, true);
+    // Wait for any model downloads to finish so the next click doesn't need them.
+    await Promise.allSettled(translatorPromises.filter(Boolean));
+    translatorPromises.forEach(p => p && p.then(t => t.destroy()).catch(() => {}));
+    if (/activation/i.test(err.message)) setStatus('Translation model is ready — press Start captions once more to open the caption bar.');
+    else setStatus('Could not open the caption window: ' + err.message, true);
     $('start').disabled = false;
     return;
   }
-  render('', 'Setting up…', '');
+  render('', ['Setting up…'], '');
 
   try {
     const constraints = $('mic').value ? { audio: { deviceId: { exact: $('mic').value } } } : { audio: true };
@@ -388,19 +458,23 @@ async function start(pipPromise, translatorPromise) {
     s.getTracks().forEach(t => t.stop());
   } catch {
     setStatus('Microphone access was blocked. Allow the microphone for this page and try again.', true);
-    if (translatorPromise) translatorPromise.then(t => t.destroy()).catch(() => {});
+    translatorPromises.forEach(p => p && p.then(t => t.destroy()).catch(() => {}));
     closeBar();
     $('start').disabled = false;
     return;
   }
 
-  translator = await makeTranslator(translatorPromise);
-  if (translator) setStatus('Captioning English → ' + $('tgt').selectedOptions[0].text + '. Drag the bar to the top of the screen.');
-  else if (tgt === 'en') setStatus('Captioning in English. Drag the bar to the top of the screen.');
+  translators = [
+    await makeTranslator(translatorPromises[0], 'tgt'),
+    lineCount === 2 ? await makeTranslator(translatorPromises[1], 'tgt2') : null
+  ];
+  const names = [$('tgt').selectedOptions[0].text].concat(lineCount === 2 ? [$('tgt2').selectedOptions[0].text] : []);
+  if (!statusEl.classList.contains('warn')) setStatus('Captioning English → ' + names.join(' + ') + '. Drag the bar to the top of the screen.');
 
   running = true;
   finalText = ''; lastFinalOrig = '';
-  render('', '', '');
+  render('', ['', ''], '');
+  applyBarPrefs();
   startRecognition(srcTag);
   $('stop').disabled = false;
 }
@@ -410,7 +484,7 @@ function stop() {
   running = false;
   clearTimeout(previewTimer);
   if (rec) { try { rec.onend = null; rec.stop(); } catch {} rec = null; }
-  if (translator) { try { translator.destroy(); } catch {} translator = null; }
+  translators.forEach(t => { if (t) { try { t.destroy(); } catch {} } }); translators = [null, null];
   closeBar();
   $('start').disabled = false;
   $('stop').disabled = true;
@@ -418,14 +492,16 @@ function stop() {
 }
 
 $('start').addEventListener('click', () => {
-  // Request the floating window as the very first thing, while the click still
-  // counts as user activation. Everything else waits on it.
-  let pipPromise = null, translatorPromise = null;
+  // Order matters: translator downloads need user activation, and requesting the
+  // floating window consumes it. So create translators first, then ask for the window.
+  const translatorPromises = ['tgt', 'tgt2'].map(id => {
+    try { return requestTranslator(id); } catch (err) { return Promise.reject(err); }
+  });
+  let pipPromise = null;
   if (hasPip) {
     try { pipPromise = requestPip(); } catch (err) { pipPromise = Promise.reject(err); }
   }
-  try { translatorPromise = requestTranslator($('tgt').value); } catch (err) { translatorPromise = Promise.reject(err); }
-  start(pipPromise, translatorPromise);
+  start(pipPromise, translatorPromises);
 });
 $('stop').addEventListener('click', stop);
 $('size').addEventListener('input', () => { prefs.size = +$('size').value; savePrefs(); });
