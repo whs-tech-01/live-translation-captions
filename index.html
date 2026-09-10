@@ -35,6 +35,7 @@
   .inline select{flex:1}
   .icon{width:40px;height:40px;padding:0;border-radius:8px;border:1px solid var(--rule);background:#fff;font-size:20px;line-height:1;color:var(--muted);cursor:pointer}
   .icon:hover{color:#b23a1d;border-color:#b23a1d}
+  .preview{border-radius:8px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.18)}
   .actions{display:flex;gap:10px}
   button{font:inherit;font-size:15px;font-weight:600;padding:12px 22px;border-radius:8px;border:1px solid transparent;cursor:pointer}
   #start{background:var(--gold);color:var(--green-deep)}
@@ -124,6 +125,11 @@
 
     <label class="check"><input id="showOrig" type="checkbox"> Also show the spoken words, smaller, under the caption</label>
 
+    <div class="field">
+      <label>Preview — this is how the caption bar will look</label>
+      <div id="preview" class="preview"></div>
+    </div>
+
     <div class="actions">
       <button id="start">Start captions</button>
       <button id="stop" disabled>Stop</button>
@@ -187,10 +193,42 @@ const BAR_HTML = `<div class="bar">
 let rec = null, pip = null, barDoc = null;
 let running = false, seq = 0, previewTimer = null;
 let statusEl = $('status');
+
+const SAMPLE = {
+  en:    ['Good morning, everyone.', 'Please open your books to page twelve.'],
+  es:    ['Buenos días a todos.', 'Por favor, abran sus libros en la página doce.'],
+  'es-ES': ['Buenos días a todos.', 'Por favor, abrid vuestros libros por la página doce.'],
+  fr:    ['Bonjour à tous.', 'Veuillez ouvrir vos livres à la page douze.'],
+  pa:    ['ਸਭ ਨੂੰ ਸ਼ੁਭ ਸਵੇਰ।', 'ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੀਆਂ ਕਿਤਾਬਾਂ ਪੰਨਾ ਬਾਰਾਂ ਉੱਤੇ ਖੋਲ੍ਹੋ।'],
+  tl:    ['Magandang umaga sa inyong lahat.', 'Pakibuksan ang inyong mga libro sa pahina labindalawa.'],
+  vi:    ['Chào buổi sáng mọi người.', 'Vui lòng mở sách đến trang mười hai.'],
+  th:    ['สวัสดีตอนเช้าทุกคน', 'กรุณาเปิดหนังสือไปที่หน้าสิบสอง'],
+  ar:    ['صباح الخير جميعًا.', 'من فضلكم افتحوا كتبكم على الصفحة الثانية عشرة.'],
+  zh:    ['大家早上好。', '请把书翻到第十二页。']
+};
+let previewDoc = null;
+function renderPreview() {
+  if (!previewDoc) return;
+  const src = srcCode();
+  const two = !!$('tgt2').value;
+  const pick = v => SAMPLE[v] || SAMPLE[v.split('-')[0]] || SAMPLE.en;
+  const l1 = pick($('tgt').value), l2 = two ? pick($('tgt2').value) : null;
+  const root = previewDoc.host;
+  root.style.setProperty('--size', Math.round(prefs.size * 0.6) + 'px');
+  root.style.setProperty('--bg', prefs.lightBg ? '.72' : '.96');
+  root.style.height = (two ? 190 : 150) * 0.75 + 'px';
+  previewDoc.getElementById('prev0').textContent = two ? '' : l1[0];
+  previewDoc.getElementById('prev0').style.display = two ? 'none' : '';
+  previewDoc.getElementById('live0').textContent = l1[1];
+  previewDoc.getElementById('row1').classList.toggle('on', two);
+  previewDoc.getElementById('live1').textContent = l2 ? l2[1] : '';
+  previewDoc.getElementById('orig').classList.toggle('on', prefs.showOrig);
+  previewDoc.getElementById('orig').textContent = pick(src)[1];
+}
 let downloading = false;
 
 const prefs = Object.assign({ size: 34, showOrig: false, lightBg: false, src: 'en-US', tgt: 'es', tgt2: '' }, JSON.parse(localStorage.getItem('captionPrefs') || '{}'));
-function savePrefs() { localStorage.setItem('captionPrefs', JSON.stringify(prefs)); applyBarPrefs(); }
+function savePrefs() { localStorage.setItem('captionPrefs', JSON.stringify(prefs)); applyBarPrefs(); renderPreview(); }
 $('size').value = prefs.size;
 $('showOrig').checked = prefs.showOrig;
 if ([...$('src').options].some(o => o.value === prefs.src)) $('src').value = prefs.src;
@@ -213,11 +251,21 @@ async function prewarm(selectId) {
     if (!running) setStatus(name + ' is ready. Press Start captions.');
   } catch { /* needs a real click; Start will handle it */ }
 }
+// Live preview of the bar on the page
+{
+  const host = $('preview');
+  host.attachShadow({ mode: 'open' });
+  host.shadowRoot.innerHTML = '<style>' + BAR_CSS + ' :host{display:block} .ctl,.dot{display:none} .stack{left:16px;right:16px;bottom:8px}</style>' + BAR_HTML;
+  previewDoc = host.shadowRoot;
+  renderPreview();
+}
+['src', 'tgt', 'tgt2'].forEach(id => $(id).addEventListener('change', renderPreview));
 ['src', 'tgt', 'tgt2'].forEach(id => $(id).addEventListener('change', () => { if (!running && !downloading) $('start').textContent = 'Start captions'; }));
 function showSecondLang(on) {
   $('secondLang').classList.toggle('on', on);
   $('addLang').style.display = on ? 'none' : '';
   if (!on) { $('tgt2').value = ''; prefs.tgt2 = ''; savePrefs(); }
+  renderPreview();
 }
 $('addLang').addEventListener('click', () => { showSecondLang(true); $('tgt2').focus(); });
 $('removeLang').addEventListener('click', () => showSecondLang(false));
