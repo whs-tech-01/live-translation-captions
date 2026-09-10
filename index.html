@@ -52,7 +52,7 @@
   .tip{margin:20px 0 0;padding:12px 14px;background:#fff6d6;border-left:3px solid var(--gold-deep);border-radius:0 8px 8px 0;font-size:14px;line-height:1.5}
   .tip b{color:var(--green)}
   .mic-tip{margin:18px 0 0;font-size:14px;color:var(--muted);line-height:1.5}
-  #inlineBar{display:none;position:fixed;top:0;left:0;right:0;height:150px;z-index:10}
+  #inlineBar{display:none;position:fixed;top:0;left:0;right:0;height:80px;z-index:10}
   button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--green);outline-offset:2px}
   @media (max-width:720px){main{grid-template-columns:1fr}.head{flex-direction:column;align-items:flex-start}.head h1{font-size:30px}}
 </style>
@@ -159,20 +159,22 @@
 const $ = id => document.getElementById(id);
 
 const BAR_CSS = `
-  html,body{margin:0;height:100%;background:transparent;font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;overflow:hidden}
+  html,body{margin:0;height:100%;background:transparent;font-family:"Archivo","Segoe UI",system-ui,sans-serif;overflow:hidden}
   .bar{position:relative;height:100%;background:rgba(15,19,22,var(--bg,.96));color:#f7f7f2;overflow:hidden}
-  .stack{position:absolute;left:26px;right:26px;bottom:12px}
-  .row.second{display:none;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,.15)}
+  .stack{position:absolute;left:18px;right:18px;top:6px;transition:right .15s}
+  .bar:hover .stack{right:250px}
+  .row{}
+  .row.second{display:none;margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.15)}
   .row.second.on{display:block}
-  .prev{font-size:calc(var(--size,34px)*.72);line-height:1.25;color:#a3aaa8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .live{font-size:var(--size,34px);line-height:1.22;font-weight:500;margin-top:2px;min-height:1.22em;overflow-wrap:anywhere}
-  .orig{display:none;font-size:15px;color:#8a9290;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .prev{display:none}
+  .live{font-size:var(--size,34px);line-height:1.2;font-weight:500;min-height:1.2em;overflow-wrap:anywhere;white-space:nowrap;overflow:hidden;text-overflow:clip}
+  .orig{display:none;font-size:15px;line-height:1.3;color:#8a9290;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .orig.on{display:block}
-  .dot{position:absolute;top:10px;right:12px;width:9px;height:9px;border-radius:50%;background:#d84b34}
+  .dot{position:absolute;top:8px;right:10px;width:8px;height:8px;border-radius:50%;background:#d84b34}
   .dot.idle{background:#4b5358}
-  .ctl{position:absolute;top:6px;left:10px;display:flex;gap:6px;opacity:0;transition:opacity .15s}
+  .ctl{position:absolute;top:6px;right:26px;display:flex;gap:6px;opacity:0;transition:opacity .15s}
   .bar:hover .ctl,.ctl:focus-within{opacity:1}
-  .ctl button{font:inherit;font-size:13px;padding:3px 9px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#f7f7f2;cursor:pointer}
+  .ctl button{font:inherit;font-size:13px;padding:3px 9px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:rgba(15,19,22,.9);color:#f7f7f2;cursor:pointer}
   .ctl button:hover{background:rgba(255,255,255,.18)}
   .ctl button.on{background:#f7f7f2;color:#0f1316}
 `;
@@ -217,8 +219,6 @@ function renderPreview() {
   const root = previewDoc.host;
   root.style.setProperty('--size', Math.round(prefs.size * 0.6) + 'px');
   root.style.setProperty('--bg', prefs.lightBg ? '.72' : '.96');
-  previewDoc.getElementById('prev0').textContent = two ? '' : l1[0];
-  previewDoc.getElementById('prev0').style.display = two ? 'none' : '';
   previewDoc.getElementById('live0').textContent = l1[1];
   previewDoc.getElementById('row1').classList.toggle('on', two);
   previewDoc.getElementById('live1').textContent = l2 ? l2[1] : '';
@@ -255,7 +255,7 @@ async function prewarm(selectId) {
 {
   const host = $('preview');
   host.attachShadow({ mode: 'open' });
-  host.shadowRoot.innerHTML = '<style>' + BAR_CSS + ' :host{display:block} .ctl,.dot{display:none} .bar{height:auto;padding:14px 18px 12px} .stack{position:static} .live{min-height:0}</style>' + BAR_HTML;
+  host.shadowRoot.innerHTML = '<style>' + BAR_CSS + ' :host{display:block} .ctl,.dot{display:none} .bar{height:auto;padding:6px 18px 6px} .stack{position:static} .live{white-space:normal}</style>' + BAR_HTML;
   previewDoc = host.shadowRoot;
   renderPreview();
 }
@@ -389,21 +389,31 @@ function applyBarPrefs() {
   root.style.setProperty('--bg', prefs.lightBg ? '.72' : '.96');
   barDoc.getElementById('orig').classList.toggle('on', prefs.showOrig);
   barDoc.getElementById('row1').classList.toggle('on', lineCount === 2);
-  barDoc.getElementById('prev0').style.display = lineCount === 2 ? 'none' : '';
   barDoc.getElementById('toggleOrig').classList.toggle('on', prefs.showOrig);
   barDoc.getElementById('toggleOrig').textContent = srcCode().toUpperCase();
   barDoc.getElementById('toggleBg').classList.toggle('on', prefs.lightBg);
 }
 function wireBarControls() {
-  barDoc.getElementById('smaller').onclick = () => { prefs.size = Math.max(20, prefs.size - 3); savePrefs(); };
-  barDoc.getElementById('larger').onclick = () => { prefs.size = Math.min(64, prefs.size + 3); savePrefs(); };
-  barDoc.getElementById('toggleOrig').onclick = () => { prefs.showOrig = !prefs.showOrig; savePrefs(); };
+  barDoc.getElementById('smaller').onclick = () => { prefs.size = Math.max(20, prefs.size - 3); savePrefs(); fitBar(); };
+  barDoc.getElementById('larger').onclick = () => { prefs.size = Math.min(64, prefs.size + 3); savePrefs(); fitBar(); };
+  barDoc.getElementById('toggleOrig').onclick = () => { prefs.showOrig = !prefs.showOrig; savePrefs(); fitBar(); };
   barDoc.getElementById('toggleBg').onclick = () => { prefs.lightBg = !prefs.lightBg; savePrefs(); };
 }
 
+function barHeight() {
+  const lines = $('tgt2').value ? 2 : 1;
+  let h = 12 + Math.ceil(prefs.size * 1.2) * lines;
+  if (lines === 2) h += 9;
+  if (prefs.showOrig) h += 23;
+  return Math.max(h, 56);
+}
 function requestPip() {
   // Must be called synchronously inside the click handler, before any await.
-  return documentPictureInPicture.requestWindow({ width: Math.min(screen.availWidth, 1500), height: $('tgt2').value ? 190 : 150 });
+  return documentPictureInPicture.requestWindow({ width: Math.min(screen.availWidth, 1500), height: barHeight() });
+}
+function fitBar() {
+  if (!pip) return;
+  try { pip.resizeTo(pip.outerWidth, barHeight() + (pip.outerHeight - pip.innerHeight)); } catch {}
 }
 
 async function openBar(pipPromise) {
@@ -440,8 +450,8 @@ let lastFinalOrig = '';
 
 // Keep only the end of a long in-progress phrase so the newest words are never clipped.
 function tail(text) {
-  const width = barDoc && barDoc.getElementById('live0') ? barDoc.getElementById('live0').clientWidth : 1200;
-  const maxChars = Math.floor(width / (prefs.size * 0.52)) * 2;
+  const width = barDoc && barDoc.getElementById('live0') ? Math.max(barDoc.getElementById('live0').clientWidth, 300) : 1200;
+  const maxChars = Math.floor(width / (prefs.size * 0.5));
   if (text.length <= maxChars) return text;
   const cut = text.slice(text.length - maxChars);
   const sp = cut.indexOf(' ');
@@ -462,9 +472,8 @@ async function commit(text) {
   if (my !== seq) return;
   finalText = t[0];
   lastFinalOrig = text;
-  // One language: finished sentence moves up to the dimmed line. Two languages: each line keeps its sentence until the next words arrive.
-  if (lineCount === 2) render(undefined, t.map(tail), text);
-  else render(tail(finalText), [''], text);
+  // Each line keeps the finished sentence until the next words arrive.
+  render(undefined, t.map(tail), text);
 }
 
 function startRecognition(lang) {
