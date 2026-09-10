@@ -23,7 +23,8 @@
   label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
   .field{margin-bottom:18px}
   select,input[type=range]{width:100%;font:inherit}
-  select{padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:#fff;color:var(--ink)}
+  select{padding:0 12px;height:46px;line-height:46px;border:1px solid var(--rule);border-radius:8px;background:#fff;color:var(--ink);font-stretch:100%}
+  select option{font-stretch:100%;line-height:1.6}
   .check{display:flex;align-items:center;gap:9px;font-size:14px;color:var(--ink);margin:6px 0 24px}
   .check input{width:16px;height:16px;margin:0;accent-color:var(--green)}
   input[type=range]{accent-color:var(--green)}
@@ -216,7 +217,6 @@ function renderPreview() {
   const root = previewDoc.host;
   root.style.setProperty('--size', Math.round(prefs.size * 0.6) + 'px');
   root.style.setProperty('--bg', prefs.lightBg ? '.72' : '.96');
-  root.style.height = (two ? 190 : 150) * 0.75 + 'px';
   previewDoc.getElementById('prev0').textContent = two ? '' : l1[0];
   previewDoc.getElementById('prev0').style.display = two ? 'none' : '';
   previewDoc.getElementById('live0').textContent = l1[1];
@@ -255,7 +255,7 @@ async function prewarm(selectId) {
 {
   const host = $('preview');
   host.attachShadow({ mode: 'open' });
-  host.shadowRoot.innerHTML = '<style>' + BAR_CSS + ' :host{display:block} .ctl,.dot{display:none} .stack{left:16px;right:16px;bottom:8px}</style>' + BAR_HTML;
+  host.shadowRoot.innerHTML = '<style>' + BAR_CSS + ' :host{display:block} .ctl,.dot{display:none} .bar{height:auto;padding:14px 18px 12px} .stack{position:static} .live{min-height:0}</style>' + BAR_HTML;
   previewDoc = host.shadowRoot;
   renderPreview();
 }
